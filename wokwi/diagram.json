@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "author": "AIoT Faculty Monitor",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 120, "left": 180, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -80, "left": 70, "attrs": { "temperature": "26.5", "humidity": "55" } },
+    { "type": "wokwi-potentiometer", "id": "pot_vibe", "top": -90, "left": 230, "attrs": { "label": "Vibration Sensor (0-100mm/s)" } },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": -85, "left": 380, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot_gas", "top": 360, "left": 80, "attrs": { "label": "MQ-2 Gas / Air Quality (PPM)" } },
+    { "type": "board-ssd1306", "id": "oled1", "top": 360, "left": 280, "attrs": { "i2cAddress": "0x3c" } },
+    { "type": "wokwi-led", "id": "led_ok", "top": 210, "left": 460, "attrs": { "color": "green", "label": "NORMAL" } },
+    { "type": "wokwi-led", "id": "led_err", "top": 270, "left": 460, "attrs": { "color": "red", "label": "AI FAULT ALERT" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 240, "left": 410, "attrs": { "resistance": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 300, "left": 410, "attrs": { "resistance": "220" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.1", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "green", [ "h-15", "v-80" ] ],
+
+    [ "esp:3V3", "pot_vibe:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.1", "pot_vibe:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot_vibe:SIG", "orange", [ "h15", "v-120" ] ],
+
+    [ "esp:3V3", "ldr1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.1", "ldr1:GND", "black", [ "v0" ] ],
+    [ "esp:35", "ldr1:AO", "purple", [ "h25", "v-130" ] ],
+
+    [ "esp:3V3", "pot_gas:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.2", "pot_gas:GND", "black", [ "v0" ] ],
+    [ "esp:32", "pot_gas:SIG", "yellow", [ "h-20", "v80" ] ],
+
+    [ "esp:3V3", "oled1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND.2", "oled1:GND", "black", [ "v0" ] ],
+    [ "esp:22", "oled1:SCL", "blue", [ "h-10", "v110" ] ],
+    [ "esp:21", "oled1:SDA", "cyan", [ "h-5", "v120" ] ],
+
+    [ "esp:2", "r1:1", "green", [ "h30", "v10" ] ],
+    [ "r1:2", "led_ok:A", "green", [ "h10" ] ],
+    [ "esp:GND.2", "led_ok:C", "black", [ "h40", "v30" ] ],
+
+    [ "esp:4", "r2:1", "red", [ "h30", "v30" ] ],
+    [ "r2:2", "led_err:A", "red", [ "h10" ] ],
+    [ "esp:GND.2", "led_err:C", "black", [ "h40", "v60" ] ]
+  ],
+  "dependencies": {}
+}

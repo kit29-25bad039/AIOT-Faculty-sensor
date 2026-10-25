@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIoT Faculty Sensor Surveillance & Diagnostics Matrix</title>
+  <meta name="description" content="AIoT 5-Sensor real-time telemetry monitoring, automated failure detection, threshold analysis, and AI Faculty health supervision system powered by ESP32 and Wokwi.">
+  
+  <!-- Modern Google Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- External CDN Libraries: Chart.js & MQTT.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/mqtt@5.3.4/dist/mqtt.min.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Subtle futuristic ambient backdrop glows -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Primary Application Wrapper -->
+  <div class="app-layout">
+    
+    <!-- TOP NAVIGATION & STATUS HEADER -->
+    <header class="app-header">
+      <div class="header-branding">
+        <div class="brand-badge">
+          <span class="pulse-indicator"></span>
+          <span class="brand-code">AIoT // NODE-01</span>
+        </div>
+        <div class="brand-title-wrap">
+          <h1 class="brand-title">NEURAL-FACULTY</h1>
+          <p class="brand-subtitle">5-Channel Autonomous Sensor Surveillance & Fault Diagnostic Center</p>
+        </div>
+      </div>
+
+      <!-- Telemetry Live Badges & Connectivity Hub -->
+      <div class="header-telemetry-controls">
+        <div class="telemetry-pill" id="conn-pill" title="Click to configure live MQTT or WebSerial connection">
+          <span class="status-dot connected" id="conn-indicator"></span>
+          <span class="pill-label" id="conn-label">SIMULATOR ACTIVE</span>
+          <span class="pill-subtext" id="conn-subtext">50 ms latency</span>
+        </div>
+
+        <div class="telemetry-pill stats-pill">
+          <span class="pill-title">TELEMETRY INGEST</span>
+          <span class="pill-val" id="packet-counter">0 PKTS</span>
+        </div>
+
+        <div class="telemetry-pill stats-pill">
+          <span class="pill-title">FACULTY ALERTS</span>
+          <span class="pill-val alert-counter" id="alert-counter">0 ALERTS</span>
+        </div>
+
+        <div class="header-action-btns">
+          <button class="icon-btn" id="audio-toggle-btn" title="Toggle AI Faculty Audio Alarms">
+            <svg id="audio-icon-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="audio-icon-off" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          </button>
+          
+          <button class="btn btn-outline" id="wokwi-modal-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+            <span>Wokwi & MQTT</span>
+          </button>
+
+          <button class="btn btn-primary" id="export-report-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Export Audit</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- FACULTY OVERVIEW & HEALTH TICKER BAR -->
+    <section class="faculty-hero-banner" id="faculty-banner">
+      <div class="faculty-core-card">
+        <div class="faculty-badge-container">
+          <div class="faculty-grade-ring" id="faculty-grade-ring">
+            <span class="faculty-grade-letter" id="faculty-grade">A+</span>
+          </div>
+          <div class="faculty-meta">
+            <span class="faculty-role-tag">FACULTY SUPERVISOR AI</span>
+            <h2 class="faculty-status-title" id="faculty-status-headline">All 5 Sensors Operating in Optimal Envelope</h2>
+          </div>
+        </div>
+
+        <div class="health-gauge-wrap">
+          <div class="health-gauge-labels">
+            <span>Overall Fleet Integrity</span>
+            <span class="health-percent" id="fleet-health-pct">98.4%</span>
+          </div>
+          <div class="health-bar-track">
+            <div class="health-bar-fill" id="fleet-health-fill" style="width: 98.4%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faculty-advisory-ticker">
+        <div class="ticker-badge">
+          <span class="ticker-pulse"></span>
+          <span>LIVE FACULTY REMARKS</span>
+        </div>
+        <p class="ticker-text" id="faculty-advisory-text">
+          "Continuous Kalman filtration indicates zero drift on Sensor 1 & 2. Acoustic spectrum on Vibration Potentiometer nominal. Optical photodiode responsiveness calibrated."
+        </p>
+      </div>
+    </section>
+
+    <!-- 5 SENSOR LIVE METRICS TILES -->
+    <section class="sensors-grid" id="sensors-container">
+      
+      <!-- Sensor 1: Temperature (DHT22) -->
+      <article class="sensor-card" id="card-s1" data-sensor="s1">
+        <div class="sensor-card-top">
+          <div class="sensor-meta">
+            <div class="sensor-icon-box temp-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+            </div>
+            <div>
+              <span class="sensor-id">CH-01 // PIN 15</span>
+              <h3 class="sensor-name">Temperature (DHT22)</h3>
+            </div>
+          </div>
+          <div class="sensor-badges">
+            <span class="grade-pill grade-a" id="s1-grade">A+</span>
+            <span class="status-pill status-nominal" id="s1-status">NOMINAL</span>
+          </div>
+        </div>
+
+        <div class="sensor-value-row">
+          <span class="sensor-value" id="s1-val">26.5</span>
+          <span class="sensor-unit">°C</span>
+        </div>
+
+        <div class="sensor-sparkline-wrap">
+          <canvas id="sparkline-s1" class="sparkline-canvas" width="280" height="42"></canvas>
+        </div>
+
+        <div class="sensor-threshold-bar">
+          <div class="threshold-labels">
+            <span>Min: <b id="s1-min-lbl">5°C</b></span>
+            <span>Threshold Max: <b id="s1-max-lbl">45°C</b></span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="s1-bar" style="width: 53%;"></div>
+            <div class="threshold-marker" style="left: 90%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-card-footer">
+          <span class="sensor-diag-note" id="s1-diag">Thermal stability verified</span>
+          <button class="fault-trigger-btn" onclick="triggerSensorFault('s1')" title="Simulate Failure/Dropout">
+            Inject Fault
+          </button>
+        </div>
+      </article>
+
+      <!-- Sensor 2: Humidity (DHT22) -->
+      <article class="sensor-card" id="card-s2" data-sensor="s2">
+        <div class="sensor-card-top">
+          <div class="sensor-meta">
+            <div class="sensor-icon-box hum-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+            </div>
+            <div>
+              <span class="sensor-id">CH-02 // PIN 15</span>
+              <h3 class="sensor-name">Humidity (DHT22)</h3>
+            </div>
+          </div>
+          <div class="sensor-badges">
+            <span class="grade-pill grade-a" id="s2-grade">A+</span>
+            <span class="status-pill status-nominal" id="s2-status">NOMINAL</span>
+          </div>
+        </div>
+
+        <div class="sensor-value-row">
+          <span class="sensor-value" id="s2-val">54.0</span>
+          <span class="sensor-unit">% RH</span>
+        </div>
+
+        <div class="sensor-sparkline-wrap">
+          <canvas id="sparkline-s2" class="sparkline-canvas" width="280" height="42"></canvas>
+        </div>
+
+        <div class="sensor-threshold-bar">
+          <div class="threshold-labels">
+            <span>Min: <b id="s2-min-lbl">20%</b></span>
+            <span>Threshold Max: <b id="s2-max-lbl">85%</b></span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="s2-bar" style="width: 54%;"></div>
+            <div class="threshold-marker" style="left: 85%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-card-footer">
+          <span class="sensor-diag-note" id="s2-diag">Dew-point margin safe</span>
+          <button class="fault-trigger-btn" onclick="triggerSensorFault('s2')" title="Simulate Failure/Dropout">
+            Inject Fault
+          </button>
+        </div>
+      </article>
+
+      <!-- Sensor 3: Vibration (Piezo / Potentiometer) -->
+      <article class="sensor-card" id="card-s3" data-sensor="s3">
+        <div class="sensor-card-top">
+          <div class="sensor-meta">
+            <div class="sensor-icon-box vibe-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </div>
+            <div>
+              <span class="sensor-id">CH-03 // PIN 34</span>
+              <h3 class="sensor-name">Vibration / Stress</h3>
+            </div>
+          </div>
+          <div class="sensor-badges">
+            <span class="grade-pill grade-a" id="s3-grade">A+</span>
+            <span class="status-pill status-nominal" id="s3-status">NOMINAL</span>
+          </div>
+        </div>
+
+        <div class="sensor-value-row">
+          <span class="sensor-value" id="s3-val">12.8</span>
+          <span class="sensor-unit">mm/s</span>
+        </div>
+
+        <div class="sensor-sparkline-wrap">
+          <canvas id="sparkline-s3" class="sparkline-canvas" width="280" height="42"></canvas>
+        </div>
+
+        <div class="sensor-threshold-bar">
+          <div class="threshold-labels">
+            <span>Floor: <b>0 mm/s</b></span>
+            <span>Threshold Max: <b id="s3-max-lbl">55 mm/s</b></span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="s3-bar" style="width: 23%;"></div>
+            <div class="threshold-marker" style="left: 55%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-card-footer">
+          <span class="sensor-diag-note" id="s3-diag">Harmonic resonance clear</span>
+          <button class="fault-trigger-btn" onclick="triggerSensorFault('s3')" title="Simulate Failure/Dropout">
+            Inject Fault
+          </button>
+        </div>
+      </article>
+
+      <!-- Sensor 4: Optical / Light (LDR Photoresistor) -->
+      <article class="sensor-card" id="card-s4" data-sensor="s4">
+        <div class="sensor-card-top">
+          <div class="sensor-meta">
+            <div class="sensor-icon-box light-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </div>
+            <div>
+              <span class="sensor-id">CH-04 // PIN 35</span>
+              <h3 class="sensor-name">Ambient Light (LDR)</h3>
+            </div>
+          </div>
+          <div class="sensor-badges">
+            <span class="grade-pill grade-a" id="s4-grade">A+</span>
+            <span class="status-pill status-nominal" id="s4-status">NOMINAL</span>
+          </div>
+        </div>
+
+        <div class="sensor-value-row">
+          <span class="sensor-value" id="s4-val">420</span>
+          <span class="sensor-unit">Lux</span>
+        </div>
+
+        <div class="sensor-sparkline-wrap">
+          <canvas id="sparkline-s4" class="sparkline-canvas" width="280" height="42"></canvas>
+        </div>
+
+        <div class="sensor-threshold-bar">
+          <div class="threshold-labels">
+            <span>Min (Dropout): <b id="s4-min-lbl">20 Lux</b></span>
+            <span>Max Saturation: <b>1000 Lux</b></span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="s4-bar" style="width: 42%;"></div>
+            <div class="threshold-marker" style="left: 20px;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-card-footer">
+          <span class="sensor-diag-note" id="s4-diag">Photodiode impedance linear</span>
+          <button class="fault-trigger-btn" onclick="triggerSensorFault('s4')" title="Simulate Failure/Dropout">
+            Inject Fault
+          </button>
+        </div>
+      </article>
+
+      <!-- Sensor 5: Gas / Air Quality (MQ-2) -->
+      <article class="sensor-card" id="card-s5" data-sensor="s5">
+        <div class="sensor-card-top">
+          <div class="sensor-meta">
+            <div class="sensor-icon-box gas-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <div>
+              <span class="sensor-id">CH-05 // PIN 32</span>
+              <h3 class="sensor-name">Gas Quality (MQ-2)</h3>
+            </div>
+          </div>
+          <div class="sensor-badges">
+            <span class="grade-pill grade-a" id="s5-grade">A+</span>
+            <span class="status-pill status-nominal" id="s5-status">NOMINAL</span>
+          </div>
+        </div>
+
+        <div class="sensor-value-row">
+          <span class="sensor-value" id="s5-val">115</span>
+          <span class="sensor-unit">PPM</span>
+        </div>
+
+        <div class="sensor-sparkline-wrap">
+          <canvas id="sparkline-s5" class="sparkline-canvas" width="280" height="42"></canvas>
+        </div>
+
+        <div class="sensor-threshold-bar">
+          <div class="threshold-labels">
+            <span>Clean Air: <b>50 PPM</b></span>
+            <span>Hazard Limit: <b id="s5-max-lbl">450 PPM</b></span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="s5-bar" style="width: 23%;"></div>
+            <div class="threshold-marker" style="left: 45%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-card-footer">
+          <span class="sensor-diag-note" id="s5-diag">Atmosphere clean</span>
+          <button class="fault-trigger-btn" onclick="triggerSensorFault('s5')" title="Simulate Failure/Dropout">
+            Inject Fault
+          </button>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- MAIN CENTRAL VISUALIZATION & FACULTY LOG SECTION -->
+    <div class="main-dashboard-split">
+      
+      <!-- Primary Live Graph Panel -->
+      <section class="panel graph-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <div class="pulse-dot"></div>
+            <h2 class="panel-title">Real-Time 5-Sensor Telemetry Waveform</h2>
+            <span class="panel-sub">Multi-channel Normalized Oscilloscope (0-100% Span) with Threshold Clamping</span>
+          </div>
+          
+          <div class="graph-toolbar">
+            <div class="filter-btn-group" id="sensor-filter-group">
+              <button class="filter-chip active" data-filter="all">All 5</button>
+              <button class="filter-chip" data-filter="s1">Temp</button>
+              <button class="filter-chip" data-filter="s2">Hum</button>
+              <button class="filter-chip" data-filter="s3">Vibe</button>
+              <button class="filter-chip" data-filter="s4">Light</button>
+              <button class="filter-chip" data-filter="s5">Gas</button>
+            </div>
+
+            <div class="time-btn-group">
+              <button class="btn btn-xs" id="pause-stream-btn">
+                <span id="pause-text">Pause Stream</span>
+              </button>
+              <button class="btn btn-xs btn-outline" id="clear-graph-btn">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="telemetryChart"></canvas>
+          <div class="chart-threshold-alert-overlay hidden" id="chart-alert-overlay">
+            <span class="alert-icon">⚠️</span>
+            <span class="alert-text" id="chart-alert-msg">SENSOR FAULT / THRESHOLD BREACH DETECTED</span>
+          </div>
+        </div>
+
+        <div class="chart-legend-custom">
+          <div class="legend-item" data-sensor="s1"><span class="legend-dot color-temp"></span> Temp (°C)</div>
+          <div class="legend-item" data-sensor="s2"><span class="legend-dot color-hum"></span> Humidity (%)</div>
+          <div class="legend-item" data-sensor="s3"><span class="legend-dot color-vibe"></span> Vibration (mm/s)</div>
+          <div class="legend-item" data-sensor="s4"><span class="legend-dot color-light"></span> Light (Lux / 10)</div>
+          <div class="legend-item" data-sensor="s5"><span class="legend-dot color-gas"></span> Gas (PPM / 10)</div>
+          <div class="legend-item"><span class="legend-line-dashed"></span> Safety Threshold Limit</div>
+        </div>
+      </section>
+
+      <!-- AI Faculty Diagnostic Terminal & Action Advisory Panel -->
+      <section class="panel terminal-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+            <h2 class="panel-title">AI Faculty Surveillance Terminal</h2>
+          </div>
+          <span class="terminal-badge" id="terminal-mode">NEURAL ARBITRATOR ONLINE</span>
+        </div>
+
+        <!-- Real-Time Faculty Diagnostic Stream -->
+        <div class="terminal-body" id="faculty-terminal-log">
+          <div class="log-entry system-msg">
+            <span class="log-time">[00:00:01]</span>
+            <span class="log-tag tag-system">[SYS_INIT]</span>
+            <span class="log-content">Neural Faculty Supervision Engine bootstrapped. 5 ADC & Digital telemetry lines locked.</span>
+          </div>
+          <div class="log-entry nominal-msg">
+            <span class="log-time">[00:00:02]</span>
+            <span class="log-tag tag-pass">[ACADEMIC PASS]</span>
+            <span class="log-content">Baseline sampling frequency 1.0Hz achieved. All sensor covariance within σ < 0.05.</span>
+          </div>
+        </div>
+
+        <!-- AI Faculty Automated Root-Cause & Action Box -->
+        <div class="faculty-triage-box" id="faculty-triage-box">
+          <div class="triage-header">
+            <span class="triage-title">Faculty Prescription & Corrective Directive</span>
+            <span class="triage-severity normal" id="triage-severity">STATUS: NOMINAL</span>
+          </div>
+          <p class="triage-desc" id="triage-desc">
+            No sensor anomaly detected. Automatic failover relays on standby. All nodes compliant with IEEE 1451.4 smart transducer guidelines.
+          </p>
+          <div class="triage-actions" id="triage-actions">
+            <button class="btn btn-xs btn-outline" onclick="restoreAllSensors()">Auto-Heal & Reset All Sensors</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- LOWER CONTROLS SECTION: FAULT LAB & THRESHOLD CALIBRATOR -->
+    <div class="control-grids">
+      
+      <!-- Interactive Threshold Calibrator (Can sync with ESP32 via MQTT!) -->
+      <section class="panel control-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Dynamic Safety Threshold Calibrator</h3>
+          <span class="panel-sub">Slide to adjust fault boundary limits. Syncs dynamically to ESP32 Firmware.</span>
+        </div>
+
+        <div class="threshold-sliders-grid">
+          <!-- Temp Max -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="thresh-temp-max">Max Temp Alert (°C)</label>
+              <span class="slider-val" id="val-temp-max">45°C</span>
+            </div>
+            <input type="range" id="thresh-temp-max" min="30" max="75" value="45" step="1">
+          </div>
+
+          <!-- Hum Limits -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="thresh-hum-max">Max Humidity Margin (%)</label>
+              <span class="slider-val" id="val-hum-max">85%</span>
+            </div>
+            <input type="range" id="thresh-hum-max" min="50" max="95" value="85" step="1">
+          </div>
+
+          <!-- Vibration Max -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="thresh-vibe-max">Vibration Shock Limit (mm/s)</label>
+              <span class="slider-val" id="val-vibe-max">55 mm/s</span>
+            </div>
+            <input type="range" id="thresh-vibe-max" min="20" max="90" value="55" step="1">
+          </div>
+
+          <!-- Optical Min (Flatline detection) -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="thresh-light-min">Light Dropout Floor (Lux)</label>
+              <span class="slider-val" id="val-light-min">20 Lux</span>
+            </div>
+            <input type="range" id="thresh-light-min" min="5" max="80" value="20" step="1">
+          </div>
+
+          <!-- Gas Max -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="thresh-gas-max">Gas Hazard Limit (PPM)</label>
+              <span class="slider-val" id="val-gas-max">450 PPM</span>
+            </div>
+            <input type="range" id="thresh-gas-max" min="200" max="800" value="450" step="10">
+          </div>
+        </div>
+
+        <div class="calibrator-footer">
+          <button class="btn btn-outline btn-xs" id="reset-thresh-btn">Reset Factory Defaults</button>
+          <span class="footer-hint">Threshold touches immediately trip the AI Faculty Supervisor.</span>
+        </div>
+      </section>
+
+      <!-- Faculty Fault Simulation Suite -->
+      <section class="panel control-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Fault Injection Lab (Faculty Stress Testing)</h3>
+          <span class="panel-sub">Simulate physical wiring faults, flatlines, and environmental catastrophes</span>
+        </div>
+
+        <div class="fault-buttons-grid">
+          <button class="fault-action-btn danger" onclick="injectPresetFault('flatline_s4')">
+            <span class="btn-head">Sensor 4 Dropout</span>
+            <span class="btn-sub">Simulate LDR wire disconnect (0 Lux Flatline)</span>
+          </button>
+
+          <button class="fault-action-btn danger" onclick="injectPresetFault('thermal_runaway')">
+            <span class="btn-head">Thermal Runaway</span>
+            <span class="btn-sub">Spike Temp to 62°C past threshold</span>
+          </button>
+
+          <button class="fault-action-btn danger" onclick="injectPresetFault('severe_vibration')">
+            <span class="btn-head">Bearing Vibration Shock</span>
+            <span class="btn-sub">Vibration surges to 78 mm/s critical</span>
+          </button>
+
+          <button class="fault-action-btn danger" onclick="injectPresetFault('gas_leak')">
+            <span class="btn-head">Hazardous Gas Leak</span>
+            <span class="btn-sub">MQ-2 sensor reads 680 PPM emergency</span>
+          </button>
+
+          <button class="fault-action-btn warning" onclick="injectPresetFault('stuck_sensor')">
+            <span class="btn-head">ADC Pin Stuck-at Fault</span>
+            <span class="btn-sub">Sensor 2 freezes completely (zero variance)</span>
+          </button>
+
+          <button class="fault-action-btn success" onclick="restoreAllSensors()">
+            <span class="btn-head">Restore Fleet (Normal)</span>
+            <span class="btn-sub">Clear all injected faults & return to 100% A+</span>
+          </button>
+        </div>
+      </section>
+
+    </div>
+
+  </div> <!-- End App Layout -->
+
+  <!-- WOKWI & MQTT CONNECTION MODAL -->
+  <div class="modal-backdrop hidden" id="wokwi-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 9V4s3.03.55 4 2c1.08 1.62 0 5 0 5"></path></svg>
+          <h3>Connect ESP32 / Wokwi Live IoT Node</h3>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="mqtt-tab">MQTT Cloud Sync (Recommended)</button>
+          <button class="tab-btn" data-tab="serial-tab">Web Serial USB</button>
+          <button class="tab-btn" data-tab="instructions-tab">Wokwi Setup Files</button>
+        </div>
+
+        <!-- MQTT Connection Tab -->
+        <div class="tab-content active" id="mqtt-tab">
+          <p class="tab-desc">Connect directly to Wokwi simulation across the internet via public secure WebSockets MQTT broker. No server installation needed!</p>
+          
+          <div class="form-group">
+            <label for="mqtt-broker-input">WebSocket MQTT Broker URL</label>
+            <input type="text" id="mqtt-broker-input" value="wss://broker.emqx.io:8084/mqtt" placeholder="wss://broker.emqx.io:8084/mqtt">
+            <span class="input-hint">Alternative: <code>wss://broker.hivemq.com:8884/mqtt</code></span>
+          </div>
+
+          <div class="form-group">
+            <label for="mqtt-topic-input">Telemetry Topic</label>
+            <input type="text" id="mqtt-topic-input" value="wokwi/aiot/faculty-monitor/telemetry">
+          </div>
+
+          <div class="modal-action-row">
+            <button class="btn btn-primary" id="btn-connect-mqtt">Connect to Live Wokwi MQTT</button>
+            <button class="btn btn-outline" id="btn-disconnect-mqtt">Use Local Simulator</button>
+            <span class="conn-status-msg" id="mqtt-status-msg">Status: Standby</span>
+          </div>
+        </div>
+
+        <!-- Web Serial USB Tab -->
+        <div class="tab-content hidden" id="serial-tab">
+          <p class="tab-desc">If you have a physical ESP32 connected via USB, you can stream real-time JSON telemetry directly into this dashboard with Chrome Web Serial!</p>
+          <div class="modal-action-row">
+            <button class="btn btn-primary" id="btn-connect-serial">Connect USB Serial Port (115200 Baud)</button>
+            <span class="conn-status-msg" id="serial-status-msg">Web Serial Ready</span>
+          </div>
+        </div>
+
+        <!-- Wokwi Setup Files Tab -->
+        <div class="tab-content hidden" id="instructions-tab">
+          <p class="tab-desc">Ready to test in Wokwi? All circuit & code files are generated in your workspace folder <code>wokwi/</code>:</p>
+          
+          <div class="code-preview-box">
+            <div class="code-header">
+              <span>wokwi/sketch.ino (ESP32 Firmware)</span>
+              <button class="btn btn-xs" onclick="navigator.clipboard.writeText('See wokwi/sketch.ino in workspace')">Copy Path</button>
+            </div>
+            <pre><code>DHT22 on GPIO 15 | Potentiometer on GPIO 34 | LDR on GPIO 35 | MQ-2 on GPIO 32 | OLED on GPIO 21/22</code></pre>
+          </div>
+
+          <div class="code-preview-box">
+            <div class="code-header">
+              <span>wokwi/diagram.json (Circuit Schematic)</span>
+              <button class="btn btn-xs" onclick="navigator.clipboard.writeText('See wokwi/diagram.json in workspace')">Copy Path</button>
+            </div>
+            <pre><code>ESP32-devkit-v4 + SSD1306 OLED + 5 Sensors + OK/ERR LEDs</code></pre>
+          </div>
+
+          <p class="input-hint">Open <a href="https://wokwi.com/projects/new/esp32" target="_blank" rel="noopener" style="color: var(--accent-cyan); text-decoration: underline;">https://wokwi.com/projects/new/esp32</a>, paste <code>sketch.ino</code> and <code>diagram.json</code>, click Play, and watch your dashboard update live!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
